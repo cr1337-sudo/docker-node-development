@@ -8,12 +8,12 @@ WORKDIR /app
 COPY package.json .
 #Run npm i to install dependecies
 RUN npm install
+RUN npm install -D
 #Copy every single file into /app (WORKDIR)
 COPY . .
 #Port exposing
-EXPOSE 3000
+#Default port 
+ENV PORT 3000 
+EXPOSE $PORT 
 #Run app
-CMD ["node","index.js"]
-
-#In console: docker build -t $imageName $Dockerfile Dir (.)
-#Run container: docker run -p 3000:3000 $imageName
+CMD ["npm","run","dev"]
