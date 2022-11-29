@@ -1,0 +1,17 @@
+version: "3" #Docker compose version
+#Containers that we want to create
+services:
+  #Container name
+  node-app:
+    # Dockerfile directory
+    build: .
+    ports: 
+      - "3000:3000"
+    volumes:
+      #Local directory / Inner container directory
+      - ./:/app
+      - /app/node_modules
+    environment:
+      - PORT=3000
+    # env_file:
+      # - ./.env

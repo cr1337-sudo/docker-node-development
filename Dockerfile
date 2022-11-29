@@ -7,8 +7,15 @@ WORKDIR /app
 #Copy package.json in the docker container
 COPY package.json .
 #Run npm i to install dependecies
-RUN npm install
-RUN npm install -D
+#Parametro leido del docker-compose a la hora de levantar el contenedor
+RUN npm install 
+
+ARG NODE_ENV
+RUN if [ "$NODE_ENV" = "development" ];\
+        then npm install;\
+        else npm install --only=production;\
+        fi
+
 #Copy every single file into /app (WORKDIR)
 COPY . .
 #Port exposing
@@ -16,4 +23,4 @@ COPY . .
 ENV PORT 3000 
 EXPOSE $PORT 
 #Run app
-CMD ["npm","run","dev"]
+CMD ["node","index"]

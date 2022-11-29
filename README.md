@@ -60,7 +60,7 @@ Dockerfile
 
 #### Build image
 
-Having the Dockerfile & .dockerignore prepared, it's time to build our [Docker image](https://docs.docker.com/engine/reference/commandline/image/) and run it in a [Docker container](https://www.docker.com/resources/what-container/):
+Having the Dockerfile & .dockerignore prepared, it's time to build our [Docker image](https://docs.docker.com/engine/reference/commandline/image/) an run it in a [Docker container](https://www.docker.com/resources/what-container/):
 
 ```
 Syntaxis: docker build -t $imageName $workDir
@@ -188,3 +188,144 @@ docker run  -e PORT=3000 -p 3000:3000 -v %cd%:/app:ro -v /app/node_modules -d --
 
 **-v _/app/node_modules_** will prevent the node_modules folder to be deleted in our container if we remove it in the client side.
 
+## Docker-compose
+
+Tt's useful for creating reusable containers with a predefined command list
+
+#### Initial template
+
+```
+version: "3" #Docker compose version
+#Containers that we want to create
+services:
+  #Container name
+  node-app:
+    # Dockerfile directory
+    build: .
+    ports: 
+      - "3000:3000"
+    volumes:
+      #Local directory / Inner container directory
+      - ./:/app
+      - /app/node_modules
+    environment:
+      - PORT=3000
+    # env_file:
+      # - ./.env
+```
+
+#### Run docker-compose
+
+```
+docker-compose up  -d 
+```
+
+### Delete compose container
+```
+docker-compose down -v
+```
+
+If we make changes in our Dockerfile, we have to rebuild our image. 
+
+```
+docker-compose up --build
+```
+
+## Development vs Production
+
+We can have a Dockerfile for development and another one for production.
+But in this case we will create 3 new files (and you can delete or rename your old docker-compose file):
+- docker-compose.yml
+- docker-compose.dev.yml
+- docker-compose.prod.yml
+
+
+Our new files will look like this:
+
+##### docker-compose
+```
+#Shared configuration for the other docker-compose files
+version: '3'
+services:
+  node-app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+```
+
+##### docker-compose.dev
+```
+version: '3'
+services:
+  node-app:
+    build: 
+      context: . #Dockefile directory
+      args: 
+        NODE_ENV: development
+    volumes:
+      #Local directory / Inner container directory
+      - ./:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+```
+
+##### docker-compose.prod
+
+```
+version: '3'
+services:
+  node-app:
+    build: 
+      context: . #Dockefile directory
+      args: 
+        NODE_ENV: production
+    environment:
+      - NODE_ENV=production
+    command: node index
+```
+
+After this, we shoul modify our Dockerfile and change it to this:
+
+```
+#Project configuration 
+
+FROM node:19
+#Working directory of my container
+#Every docker comand will run in this directory
+WORKDIR /app
+#Copy package.json in the docker container
+COPY package.json .
+#Run npm i to install dependecies
+#Parametro leido del docker-compose a la hora de levantar el contenedor
+RUN npm install 
+
+ARG NODE_ENV
+RUN if [ "$NODE_ENV" = "development" ];\
+        then npm install;\
+        else npm install --only=production;\
+        fi
+
+#Copy every single file into /app (WORKDIR)
+COPY . .
+#Port exposing
+#Default port 
+ENV PORT 3000 
+EXPOSE $PORT 
+#Run app
+CMD ["node","index"]
+
+```
+### Run docker-compose.dev (Development mode)
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+```
+### Run docker-compose.prod (Production mode)
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
