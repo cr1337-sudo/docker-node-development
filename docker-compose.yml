@@ -1,9 +1,25 @@
 #Shared configuration
 version: '3'
 services:
+#Local image
   node-app:
     build: .
     ports:
       - "3000:3000"
     environment:
       - PORT=3000
+
+#Remote image
+  mongo:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=cristian
+      - MONGO_INITDB_ROOT_PASSWORD=123456
+    volumes:
+      # named volume config 1/2
+      - mongo-db:/data/db
+volumes:
+# mongo named volume config 2/2
+  mongo-db:
+
+

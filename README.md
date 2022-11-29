@@ -45,7 +45,7 @@ EXPOSE 3000
 #Run app
 CMD ["node","index.js"]
 ```
-#### .dockerignore config
+## .dockerignore config
 
 Just like git, we can have a [.dockerignore](https://docs.docker.com/engine/reference/builder/#dockerignore-file) file. This file will allow us to specify a list of files/folders that docker must ignore during the build process.
 
@@ -58,7 +58,7 @@ Dockerfile
 ```
 
 
-#### Build image
+## Build an image
 
 Having the Dockerfile & .dockerignore prepared, it's time to build our [Docker image](https://docs.docker.com/engine/reference/commandline/image/) an run it in a [Docker container](https://www.docker.com/resources/what-container/):
 
@@ -68,7 +68,7 @@ Syntaxis: docker build -t $imageName $workDir
 docker build -t node-app-image .
 ```
 
-#### Run image 
+### Run image 
 ```
 Syntaxis: docker run -p $clientPort:$containerPort -d (detached mode) --name $containerName $imageName
 
@@ -76,7 +76,7 @@ docker run -p 3000:3000 -d --name node-app node-app-image
 ```
 
 
-#### Listen to changes
+### Listen to changes
 
 After each change we should rebuild the image, we can prevent this using [Volumes](https://docs.docker.com/storage/volumes/). This allow us to have data persistance and syncronization between our container and project folder.
 
@@ -103,11 +103,11 @@ Example:
 docker run -p 3000:3000 -v %cd%:/app -d --name node-app node-app-image
 ```
 
-##### Restart node server automatically after a change
+#### Restart node server automatically after a change
 
 In order to reflect the changes, we must use [Nodemon](https://www.npmjs.com/package/nodemon) to refresh our server after every single change. We can do this with just a few changes:
 
-###### Dockerfile
+##### Dockerfile
 
 ```
 FROM node:19
@@ -128,7 +128,7 @@ EXPOSE $PORT
 CMD ["npm","run","dev"]
 ```
 
-###### package.json
+##### package.json
 ```
 {
   "name": "devops",
@@ -192,7 +192,7 @@ docker run  -e PORT=3000 -p 3000:3000 -v %cd%:/app:ro -v /app/node_modules -d --
 
 Tt's useful for creating reusable containers with a predefined command list
 
-#### Initial template
+### Initial template
 
 ```
 version: "3" #Docker compose version
@@ -214,7 +214,7 @@ services:
       # - ./.env
 ```
 
-#### Run docker-compose
+### Run docker-compose
 
 ```
 docker-compose up  -d 
@@ -242,7 +242,7 @@ But in this case we will create 3 new files (and you can delete or rename your o
 
 Our new files will look like this:
 
-##### docker-compose
+### docker-compose
 ```
 #Shared configuration for the other docker-compose files
 version: '3'
@@ -255,7 +255,7 @@ services:
       - PORT=3000
 ```
 
-##### docker-compose.dev
+### docker-compose.dev
 ```
 version: '3'
 services:
@@ -273,7 +273,7 @@ services:
     command: npm run dev
 ```
 
-##### docker-compose.prod
+### docker-compose.prod
 
 ```
 version: '3'
@@ -328,4 +328,54 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 ```
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+### docker-compose down
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml down -d
+```
+
+## MongoDB 
+
+Configuration (Add this to the end of your docker-compose)
+
+```
+#Remote image
+  mongo:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=cristian
+      - MONGO_INITDB_ROOT_PASSWORD=123456
+    volumes:
+      # named volume config 1/2
+      - mongo-db:/data/db
+    ports:
+      - 2017:27017
+volumes:
+# mongo named volume config 2/2
+  mongo-db:
+```
+
+Inspect docker logs
+
+```
+docker logs $containerName
+```
+Docker container info
+```
+docker inspect $containerName
+```
+
+### Connect mongoose to mongo container
+
+```
+mongoose.connect("mongodb://$user:$password@$containerName:$port/?authSource=admin")
+  .then(() => {
+    console.log("Succesfully connected to DB");
+  })
+  .catch((e) => {
+    console.log(e);
+  });
+
 ```
