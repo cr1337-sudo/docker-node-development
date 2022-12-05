@@ -5,14 +5,17 @@ services:
   node-app:
     build: .
     ports:
-      - "3000:3000"
+      - "3000-3001:3000"
     environment:
       - PORT=3000
+    depends_on:
+      - mongo
 
 #Remote image
   mongo:
     image: mongo
     environment:
+      - PORT=2017
       - MONGO_INITDB_ROOT_USERNAME=cristian
       - MONGO_INITDB_ROOT_PASSWORD=123456
     volumes:
